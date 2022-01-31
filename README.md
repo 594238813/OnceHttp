@@ -1,9 +1,9 @@
 # OnceHttp
 一次简单的请求  
 对于使用者来说，重点关注入参、出参  
-出参：无非Response.body  
-入参：map或者是bean  
-一个请求：无非包括host、api、header、body  
+出参：Response.body  
+入参：keyvalue的map或者是bean  
+一个请求：包括host、api、header、body  
 ### 使用
 使用前配置
 ```
