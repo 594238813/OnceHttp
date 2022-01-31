@@ -26,5 +26,4 @@ class LoginRequest : OnceRequest(){
         bean.data?.nickname = "改变昵称了"
         return bean
     }
-
 }

@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launchWhenStarted {
-            val bean = RequestLoginBean("594238813@qq.com","huangyutong0311")
+            val bean = RequestLoginBean("账号","密码")
             mainViewModel.requestLogin(bean)
                 .collect{
                     Log.e("code", "${it.errorCode}-${it.errorMsg}")
