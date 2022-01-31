@@ -5,6 +5,19 @@
 入参：map或者是bean  
 一个请求：无非包括host、api、header、body  
 ### 使用
+使用前配置
+```
+        ktHttpConfig(this) {
+            host = "https://www.wanandroid.com/"
+            //公共的 header参数
+            header["appVersion"] = "1.0.0"
+            //公共的 body参数
+//            mapData["appVersion"] = "1.0.0"
+
+            //可以传入一个client
+//            okHttpClient = OkHttpClient.Builder().build()
+        }
+```
 请求继承 OnceRequest() 就好，api、header、body可以自由更改
 ```
 class LoginRequest : OnceRequest(){
