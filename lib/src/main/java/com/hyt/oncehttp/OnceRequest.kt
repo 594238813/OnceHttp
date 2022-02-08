@@ -25,6 +25,7 @@ import okhttp3.*
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.lang.NullPointerException
 
 abstract class OnceRequest{
 
@@ -80,10 +81,6 @@ abstract class OnceRequest{
             }
         }
 
-
-
-
-
         //执行
         return client.newCall(requestBuilder.build()).awaitResponse()
     }
@@ -108,6 +105,7 @@ abstract class OnceRequest{
         when(contentType){
             MULTIPART_FORM_DATA->{
                 //上传文件
+                throw NullPointerException("不支持上传文件")
             }
             FORM_DATA->{
                 //构建表单参数
@@ -230,6 +228,53 @@ abstract class OnceRequest{
             printEvent("${call.request().url} -useTime:${end-start}")
         }
     }
-
 }
 
+
+//根据字符串 直接请求
+//get 方式
+fun String.makeOnceRequestGET(bean: Any?=null) = object: OnceRequest() {
+    override val api: String =  this@makeOnceRequestGET
+}.apply {
+    if (bean != null) {
+        addParam(bean)
+    }
+}
+
+fun String.makeOnceRequestGET(map: Map<String,String>) = object: OnceRequest() {
+    override val api: String = this@makeOnceRequestGET
+}.addParam(map)
+
+
+//post json 方式
+fun String.makeOnceRequestPSOT_JSON(bean: Any?=null) = object: OnceRequest() {
+    override val api: String =  this@makeOnceRequestPSOT_JSON
+    override var method = POST
+    override var contentType = JSON_DATA
+}.apply {
+    if (bean != null) {
+        addParam(bean)
+    }
+}
+fun String.makeOnceRequestPSOT_JSON(map: Map<String,String>) = object: OnceRequest() {
+    override val api: String =  this@makeOnceRequestPSOT_JSON
+    override var method = POST
+    override var contentType = JSON_DATA
+}.addParam(map)
+
+//post form 方式
+fun String.makeOnceRequestPSOT_FORM(bean: Any?=null) = object: OnceRequest() {
+    override val api: String =  this@makeOnceRequestPSOT_FORM
+    override var method = POST
+    override var contentType = FORM_DATA
+}.apply {
+    if (bean != null) {
+        addParam(bean)
+    }
+}
+
+fun String.makeOnceRequestPSOT_FORM(map: Map<String,String>) = object: OnceRequest() {
+    override val api: String =  this@makeOnceRequestPSOT_FORM
+    override var method = POST
+    override var contentType = FORM_DATA
+}.addParam(map)

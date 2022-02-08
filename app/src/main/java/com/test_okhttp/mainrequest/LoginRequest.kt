@@ -18,7 +18,7 @@ class LoginRequest : OnceRequest(){
         nMap["deviceId"] = "设备id"
         return nMap
     }
-    
+
     override fun <T> afterRequest(bean: T): T {
         //这里是 app 自定义拦截数据
         //flow 最后接收到的 是这里的bean

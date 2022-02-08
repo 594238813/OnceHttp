@@ -14,10 +14,10 @@ class TestApplication : Application() {
             //公共的 header参数
             header["appVersion"] = "1.0.0"
             //公共的 body参数
-//            mapData["appVersion"] = "1.0.0"
+            //mapData["appVersion"] = "1.0.0"
 
             //可以传入一个client
-//            okHttpClient = OkHttpClient.Builder().build()
+            //okHttpClient = OkHttpClient.Builder().build()
         }
 
 
