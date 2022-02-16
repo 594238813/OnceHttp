@@ -24,7 +24,10 @@ import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 import java.lang.NullPointerException
 
 abstract class OnceRequest{
@@ -59,7 +62,7 @@ abstract class OnceRequest{
         return header
     }
 
-    //构造request
+    //构造request 并执行
     suspend fun makeRequest(): Response {
         //构造一个request 一个request 包含 url、header，公共参数
         val requestBuilder = Request.Builder()
@@ -87,11 +90,7 @@ abstract class OnceRequest{
 
     private fun makeGetUrl(url: String): String {
         var newUrl = url
-        newUrl += if(url.indexOf("?")<-1){
-            "?"
-        }else{
-            "&"
-        }
+        newUrl += if(url.indexOf("?")<-1) "?" else "&"
         mapData.forEach { (k, v) ->
             newUrl+= "${k}=${v}&"
         }
@@ -104,8 +103,23 @@ abstract class OnceRequest{
         //根据 Content-Type 设置参数
         when(contentType){
             MULTIPART_FORM_DATA->{
-                //上传文件
-                throw NullPointerException("不支持上传文件")
+                //上传文件  构建上传文件
+
+                //转换 除 文件的 额外参数
+                val formBody = FormBody.Builder()
+                mapData.forEach {
+                    formBody.addEncoded(it.key,it.value)
+                }
+
+                val requestBody = MultipartBody.Builder().apply {
+                    setType(MultipartBody.FORM)
+                    //添加 文件 部分
+                    addFormDataPart(name,file.name,file.asRequestBody())
+                    //添加 额外参数
+                    addPart(formBody.build())
+                }
+
+                requestBuilder.post(requestBody.build())
             }
             FORM_DATA->{
                 //构建表单参数
@@ -125,14 +139,21 @@ abstract class OnceRequest{
         }
     }
 
+    private var name = ""
+    private lateinit var file: File
+
+    //添加上传文件
+    fun addUploadFile(name:String,file: File):OnceRequest{
+        this.name = name
+        this.file = file
+        return this
+    }
+
     //请求返回-flow
     inline fun <reified T> requestBackFlow(): Flow<T> {
-
         return flow<T> {
-
             //flow发射
             emit(requestBackBean())
-
         }.flowOn(Dispatchers.IO)
     }
 
@@ -141,7 +162,7 @@ abstract class OnceRequest{
     }
 
     //请求返回-bean
-    suspend inline fun <reified T> requestBackBean():T{
+    suspend inline fun <reified T> requestBackBean() : T{
         //执行返回
         val response = makeRequest()
 
@@ -159,7 +180,7 @@ abstract class OnceRequest{
             val json = response.body?.charStream()
             val resultBean = Gson().fromJson<T>(json, object : TypeToken<T>(){}.type )
 
-            //app认为 数据是否正常
+            //afterRequest拦截 认为  数据是否正常 或者修改数据
             //先拦截 在发射
             return afterRequest(resultBean)
         }catch (ex:Exception){
@@ -169,7 +190,6 @@ abstract class OnceRequest{
             response.close()
         }
     }
-
 
     //请求之前 修改 请求的数据
     open fun beforeRequest(map:MutableMap<String,String>) = mapData
@@ -187,6 +207,7 @@ abstract class OnceRequest{
             val value = field.get(bean)
             val key = field.name
 
+            //判断基本类型
             if(field.javaClass.isPrimitive || value is String){
                 mapData[key] = value.toString()
             }
@@ -205,7 +226,6 @@ abstract class OnceRequest{
         return this
     }
 
-
     //事件监听 这里可以做很多事情
     class PrintingEventListener : EventListener() {
 
@@ -213,7 +233,7 @@ abstract class OnceRequest{
         var end = 0L
 
         private fun printEvent(name: String) {
-            Log.e("printEvent", name)
+//            Log.e("printEvent", name)
         }
 
         override fun callStart(call: Call) {
@@ -230,6 +250,8 @@ abstract class OnceRequest{
     }
 }
 
+
+//使用扩展方法 快速请求
 
 //根据字符串 直接请求
 //get 方式

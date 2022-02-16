@@ -69,6 +69,3 @@ open fun <T> afterRequest(bean:T) : T = bean
         ).requestBackLiveData<HttpData<PageBean<ArticleBean>>>()
 ```
 可以直接使用GET请求，也可以`makeOnceRequestPSOT_JSON` post json方式，也可以 `makeOnceRequestPSOT_FORM` post form 方式
-
-
-内容较多，不是很完善，持续更新中

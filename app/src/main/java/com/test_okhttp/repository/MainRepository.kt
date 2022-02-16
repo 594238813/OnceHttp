@@ -6,6 +6,10 @@ import com.test_okhttp.bean.*
 import com.test_okhttp.mainrequest.ArticleListRequest
 import com.test_okhttp.mainrequest.BannerRequest
 import com.test_okhttp.mainrequest.LoginRequest
+import com.test_okhttp.mainrequest.UpFileRequest
+import kotlinx.coroutines.flow.Flow
+import java.io.File
+import java.util.HashMap
 
 class MainRepository {
 
@@ -42,4 +46,17 @@ class MainRepository {
         "article/list/${page}/json?page_size=3".makeOnceRequestGET(
             //这里可以添加 参数  bean 、map  或者不填
         ).requestBackLiveData<HttpData<PageBean<ArticleBean>>>()
+
+    //上传文件
+    fun getUploadFile(file: File): Flow<HttpData<UploadBean>> {
+        val map = HashMap<String, String>()
+        map["type"] = "3"               //type	String	1.头像、2.美好生活、3.意见反馈
+        map["pictype"] = "2"                 //pictype	String	1.视频、2.图片
+
+        return UpFileRequest()
+            .addParam(map)
+            .addUploadFile("fileName",file).requestBackFlow()
+    }
+
+
 }

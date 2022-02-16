@@ -17,24 +17,25 @@ class KtHttpConfig {
     }
 
     var okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(OkLogInterceptor.builder()
-            .withAllLogData()
-            .setLogger(object:Logger{
-
-                //这里使用 Log.e() 部分手机不支持 Log.i()
-                override fun d(tag: String?, message: String?) {
-                    Log.e(tag,message!!)
-                }
-
-                override fun w(tag: String?, message: String?) {
-                    Log.e(tag,message!!)
-                }
-
-                override fun e(tag: String?, message: String?, throwable: Throwable?) {
-                    Log.e(tag,message!!)
-                }
-            }).build())
+//        .addInterceptor(OkLogInterceptor.builder()
+//            .withAllLogData()
+//            .setLogger(object:Logger{
+//
+//                //这里使用 Log.e() 部分手机不支持 Log.i()
+//                override fun d(tag: String?, message: String?) {
+//                    Log.e(tag,message!!)
+//                }
+//
+//                override fun w(tag: String?, message: String?) {
+//                    Log.e(tag,message!!)
+//                }
+//
+//                override fun e(tag: String?, message: String?, throwable: Throwable?) {
+//                    Log.e(tag,message!!)
+//                }
+//            }).build())
         .eventListenerFactory { OnceRequest.PrintingEventListener() }
+        .hostnameVerifier { hostname, session -> true }
         .build()
 
 

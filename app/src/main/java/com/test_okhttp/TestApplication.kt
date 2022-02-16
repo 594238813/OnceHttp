@@ -3,6 +3,7 @@ package com.test_okhttp
 import android.app.Application
 import com.hyt.oncehttp.ktHttpConfig
 
+
 class TestApplication : Application() {
 
     override fun onCreate() {
@@ -25,3 +26,4 @@ class TestApplication : Application() {
 
     }
 }
+

@@ -30,7 +30,6 @@ suspend fun Call.awaitResponse(): Response {
 
 class KtHttpCallBack(val continuation: CancellableContinuation<Response>) :Callback{
 
-
     override fun onFailure(call: Call, e: IOException) {
 
         val networkInfo =
