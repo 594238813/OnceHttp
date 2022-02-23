@@ -3,6 +3,7 @@ package com.hyt.oncehttp
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.hyt.oncehttp.PostContentType.Companion.FORM_DATA
@@ -17,6 +18,7 @@ import com.hyt.oncehttp.exception.ResponseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -153,16 +155,22 @@ abstract class OnceRequest{
     inline fun <reified T> requestBackFlow(): Flow<T> {
         return flow<T> {
             //flow发射
-            emit(requestBackBean())
+            emit(requestBackBeanInMain())
         }.flowOn(Dispatchers.IO)
     }
 
-    suspend inline fun <reified T> requestBackLiveData(): LiveData<T> {
-        return MutableLiveData(requestBackBean<T>())
+    //请求返回LiveData
+    inline fun <reified T> requestBackLiveData(): LiveData<T> {
+        return requestBackFlow<T>().asLiveData()
     }
 
-    //请求返回-bean
-    suspend inline fun <reified T> requestBackBean() : T{
+    //请求返回-bean 在io线程
+    suspend inline fun <reified T> requestBackBean() : T {
+        return requestBackFlow<T>().first()
+    }
+
+    //请求返回-bean 在Main线程
+    suspend inline fun <reified T> requestBackBeanInMain() : T {
         //执行返回
         val response = makeRequest()
 
