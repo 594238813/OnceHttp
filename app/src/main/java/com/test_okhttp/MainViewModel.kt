@@ -73,7 +73,7 @@ class MainViewModel:ViewModel() {
 
     fun getArticleListByLiveData(page:Int){
         viewModelScope.launch(Dispatchers.IO)  {
-            articleList.postValue( repository.getArticleList22222(page).value?.data)
+            articleList.postValue( repository.getArticleListLiveData(page).value?.data)
         }
     }
 

@@ -160,8 +160,10 @@ abstract class OnceRequest{
     }
 
     //请求返回LiveData
-    inline fun <reified T> requestBackLiveData(): LiveData<T> {
-        return requestBackFlow<T>().asLiveData()
+    suspend inline fun <reified T> requestBackLiveData(): LiveData<T> {
+        return withContext(Dispatchers.IO){
+            MutableLiveData(requestBackBeanInMain())
+        }
     }
 
     //请求返回-bean 在io线程
@@ -252,6 +254,9 @@ abstract class OnceRequest{
         override fun callEnd(call: Call) {
             super.callEnd(call)
             end = System.currentTimeMillis()
+
+
+
 
             printEvent("${call.request().url} -useTime:${end-start}")
         }

@@ -36,8 +36,8 @@ class MainRepository {
         "user/login".makeOnceRequestPSOT_JSON(bean).requestBackFlow<HttpData<UserBean>>()
 
 
-    //处理get 连接中有切换分页22222
-    suspend fun getArticleList22222(page:Int) =
+    //处理get 连接中有切换分页
+    suspend fun getArticleListLiveData(page:Int) =
         ArticleListRequest("article/list/${page}/json?page_size=3")
             .requestBackLiveData<HttpData<PageBean<ArticleBean>>>()
 
