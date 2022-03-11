@@ -15,9 +15,10 @@ class LoginRequest : OnceRequest(){
 
     override var contentType = PostContentType.FORM_DATA
 
-    override fun beforeRequest(map: MutableMap<String, String>): MutableMap<String, String> {
+    override fun beforeRequest(map: MutableMap<String, Any>): MutableMap<String, Any> {
+        //这里可以追加参数 或者 加密签名修改参数
         val nMap = map
-        nMap["deviceId"] = "设备id"
+        nMap["sing"] = "sing签名"
         return nMap
     }
 
@@ -26,7 +27,7 @@ class LoginRequest : OnceRequest(){
         //flow 最后接收到的 是这里的bean
         bean as HttpData<*>
         if(bean.data is UserBean){
-            bean.data?.nickname = "改变昵称了"
+            bean.data.nickname = "改变昵称了"
         }
         return bean
     }

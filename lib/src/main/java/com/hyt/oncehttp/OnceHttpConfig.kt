@@ -34,7 +34,6 @@ class KtHttpConfig {
 //                    Log.e(tag,message!!)
 //                }
 //            }).build())
-        .eventListenerFactory { OnceRequest.PrintingEventListener() }
         .hostnameVerifier { hostname, session -> true }
         .build()
 

@@ -37,7 +37,7 @@ dependencies {
     api("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
     api("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
 
-    implementation 'com.google.code.gson:gson:2.8.9'
+    api 'com.google.code.gson:gson:2.8.9'
     api("com.squareup.okhttp3:okhttp:4.9.0")
 
     implementation 'com.github.simonpercic:oklog3-java:2.3.0'

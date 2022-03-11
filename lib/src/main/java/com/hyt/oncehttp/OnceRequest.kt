@@ -1,10 +1,12 @@
 package com.hyt.oncehttp
 
+import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.asLiveData
 import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 import com.hyt.oncehttp.PostContentType.Companion.FORM_DATA
 import com.hyt.oncehttp.PostContentType.Companion.JSON_DATA
@@ -16,21 +18,18 @@ import com.hyt.oncehttp.exception.BackMediaTypeException
 import com.hyt.oncehttp.exception.DataException
 import com.hyt.oncehttp.exception.ResponseException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
-import java.lang.NullPointerException
+import java.io.IOException
+import kotlin.system.measureTimeMillis
 
 abstract class OnceRequest{
 
@@ -51,7 +50,8 @@ abstract class OnceRequest{
     //所有参数
     //参数用的是 追加 不清除
     //所有参数的都在map里
-    private var mapData = mutableMapOf<String,String>()
+    private var mapData = mutableMapOf<String,Any>()
+
 
     init {
         //获取全局 头数据  和  公共参数
@@ -110,7 +110,7 @@ abstract class OnceRequest{
                 //转换 除 文件的 额外参数
                 val formBody = FormBody.Builder()
                 mapData.forEach {
-                    formBody.addEncoded(it.key,it.value)
+                    formBody.addEncoded(it.key,it.value.toString())
                 }
 
                 val requestBody = MultipartBody.Builder().apply {
@@ -127,7 +127,8 @@ abstract class OnceRequest{
                 //构建表单参数
                 val formBody = FormBody.Builder()
                 mapData.forEach {
-                    formBody.addEncoded(it.key,it.value)
+                    //表单提交 只能是string
+                    formBody.addEncoded(it.key,it.value.toString())
                 }
                 requestBuilder.post(formBody.build())
             }
@@ -155,26 +156,25 @@ abstract class OnceRequest{
     inline fun <reified T> requestBackFlow(): Flow<T> {
         return flow<T> {
             //flow发射
-            emit(requestBackBeanInMain())
+            emit(requestBackBean())
         }.flowOn(Dispatchers.IO)
     }
 
     //请求返回LiveData
     suspend inline fun <reified T> requestBackLiveData(): LiveData<T> {
         return withContext(Dispatchers.IO){
-            MutableLiveData(requestBackBeanInMain())
+            MutableLiveData(requestBackBean())
         }
     }
 
-    //请求返回-bean 在io线程
-    suspend inline fun <reified T> requestBackBean() : T {
-        return requestBackFlow<T>().first()
-    }
 
-    //请求返回-bean 在Main线程
-    suspend inline fun <reified T> requestBackBeanInMain() : T {
-        //执行返回
-        val response = makeRequest()
+    //请求返回-bean
+    suspend inline fun <reified T> requestBackBean() : T {
+        var response : Response
+        val duration = measureTimeMillis {
+            //执行返回
+            response = makeRequest()
+        }
 
         //判断是不是200..299
         if(!response.isSuccessful){
@@ -188,10 +188,12 @@ abstract class OnceRequest{
 
         try{
             val json = response.body?.charStream()
-            val resultBean = Gson().fromJson<T>(json, object : TypeToken<T>(){}.type )
+            val resultBean = Gson().fromJson<T>(json, object : TypeToken<T>(){}.type)
+
 
             //afterRequest拦截 认为  数据是否正常 或者修改数据
             //先拦截 在发射
+            makeLog(response,resultBean,duration)
             return afterRequest(resultBean)
         }catch (ex:Exception){
             ex.printStackTrace()
@@ -201,33 +203,66 @@ abstract class OnceRequest{
         }
     }
 
+    fun makeLog(response: Response, json: Any?, duration: Long) {
+        try {
+            val temp = response.request
+
+            val httpRequest = HttpRequest(
+                body = mapData,
+                header = header
+            )
+            val httpResponse = HttpResponse(
+                body = json,
+                header = response.headers.toMap()
+            )
+            val httpbean = HttpBean(
+                host = temp.url.toString(),
+                method = temp.method,
+                request = httpRequest,
+                response = httpResponse,
+                duration = "${duration}ms",
+                contentType = contentType
+            )
+            val beanjson = Gson().toJson(httpbean)
+            Log.e("httpbean",beanjson)
+            val base64str =  Base64.encodeToString(beanjson.toByteArray(), Base64.NO_WRAP)
+            Log.e("base64",base64str)
+
+
+        }catch (ex: IOException){
+            throw DataException("makeLog 异常")
+        }
+    }
+
     //请求之前 修改 请求的数据
-    open fun beforeRequest(map:MutableMap<String,String>) = mapData
+    open fun beforeRequest(map:MutableMap<String,Any>) = mapData
 
     //请求之后 修改 返回的数据
     open fun <T> afterRequest(bean:T) : T = bean
 
-    //添加参数  bean->map
-    //这里要注意 如果传入bean，表单提交。如果bean有 list map等不会被提交
-    fun addParam(bean: Any):OnceRequest {
-        val fields = bean.javaClass.declaredFields
-        //这里使用了反射，获取对象的 变量名 和 值， GSON内部用的也是反射
-        fields.forEach { field->
-            field.isAccessible = true
-            val value = field.get(bean)
-            val key = field.name
+    //添加 参数
+    fun addParam(vararg args: Any) :OnceRequest {
+        //使用不定参数  转为map
+        val jsonObjectResult = JsonObject()
+        val gson = Gson()
+        //循环不定参数
+        args.forEach { obj->
+            //转化为 JsonObject
+            val tempJsonParser =  JsonParser.parseString(gson.toJson(obj)).asJsonObject
 
-            //判断基本类型
-            if(field.javaClass.isPrimitive || value is String){
-                mapData[key] = value.toString()
+            //合并JsonObject
+            for(key in tempJsonParser.keySet()) {
+                if (!jsonObjectResult.has(key.toString())) {
+                    jsonObjectResult.add(key.toString(),tempJsonParser.get(key.toString()))
+                }else{
+                    throw DataException("参数存在相同的 key ")
+                }
             }
         }
-        return this
-    }
 
-    //添加参数 map->map
-    fun addParam(map: Map<String,String>):OnceRequest {
-        mapData += map
+        //合并后转为map
+        mapData += GsonUtil.toMap(jsonObjectResult)
+
         return this
     }
 
@@ -236,31 +271,6 @@ abstract class OnceRequest{
         return this
     }
 
-    //事件监听 这里可以做很多事情
-    class PrintingEventListener : EventListener() {
-
-        var start = 0L
-        var end = 0L
-
-        private fun printEvent(name: String) {
-//            Log.e("printEvent", name)
-        }
-
-        override fun callStart(call: Call) {
-            super.callStart(call)
-            start = System.currentTimeMillis()
-        }
-
-        override fun callEnd(call: Call) {
-            super.callEnd(call)
-            end = System.currentTimeMillis()
-
-
-
-
-            printEvent("${call.request().url} -useTime:${end-start}")
-        }
-    }
 }
 
 
