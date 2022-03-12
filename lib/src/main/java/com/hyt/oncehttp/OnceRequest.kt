@@ -170,36 +170,40 @@ abstract class OnceRequest{
 
     //请求返回-bean
     suspend inline fun <reified T> requestBackBean() : T {
-        var response : Response
-        val duration = measureTimeMillis {
-            //执行返回
-            response = makeRequest()
-        }
-
-        //判断是不是200..299
-        if(!response.isSuccessful){
-            throw ResponseException("服务器异常-${response.code}-${response.message}")
-        }
-        //简单判断 application/json 类型  排除、图片、视频、音频
-        //只允许通过json
-        if(response.body?.contentType().toString().indexOf("application/json")==-1){
-            throw BackMediaTypeException("返回类型只允许application/json")
-        }
-
-        try{
-            val json = response.body?.charStream()
-            val resultBean = Gson().fromJson<T>(json, object : TypeToken<T>(){}.type)
+        return withContext(Dispatchers.IO) {
 
 
-            //afterRequest拦截 认为  数据是否正常 或者修改数据
-            //先拦截 在发射
-            makeLog(response,resultBean,duration)
-            return afterRequest(resultBean)
-        }catch (ex:Exception){
-            ex.printStackTrace()
-            throw DataException("数据解析异常")
-        }finally {
-            response.close()
+            var response: Response
+            val duration = measureTimeMillis {
+                //执行返回
+                response = makeRequest()
+            }
+
+            //判断是不是200..299
+            if (!response.isSuccessful) {
+                throw ResponseException("服务器异常-${response.code}-${response.message}")
+            }
+            //简单判断 application/json 类型  排除、图片、视频、音频
+            //只允许通过json
+            if (response.body?.contentType().toString().indexOf("application/json") == -1) {
+                throw BackMediaTypeException("返回类型只允许application/json")
+            }
+
+            try {
+                val json = response.body?.charStream()
+                val resultBean = Gson().fromJson<T>(json, object : TypeToken<T>() {}.type)
+
+
+                //afterRequest拦截 认为  数据是否正常 或者修改数据
+                //先拦截 在发射
+                makeLog(response, resultBean, duration)
+                 afterRequest(resultBean)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+                throw DataException("数据解析异常")
+            } finally {
+                response.close()
+            }
         }
     }
 
