@@ -2,6 +2,7 @@ package com.test_okhttp.mainrequest
 
 import com.hyt.oncehttp.*
 import com.hyt.oncehttp.annotation.HttpMethod
+import com.hyt.oncehttp.annotation.PostContentType
 import com.test_okhttp.bean.HttpData
 import com.test_okhttp.bean.UserBean
 

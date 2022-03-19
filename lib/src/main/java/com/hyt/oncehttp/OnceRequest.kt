@@ -8,12 +8,13 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
-import com.hyt.oncehttp.PostContentType.Companion.FORM_DATA
-import com.hyt.oncehttp.PostContentType.Companion.JSON_DATA
-import com.hyt.oncehttp.PostContentType.Companion.MULTIPART_FORM_DATA
+import com.hyt.oncehttp.annotation.PostContentType.Companion.FORM_DATA
+import com.hyt.oncehttp.annotation.PostContentType.Companion.JSON_DATA
+import com.hyt.oncehttp.annotation.PostContentType.Companion.MULTIPART_FORM_DATA
 import com.hyt.oncehttp.annotation.HttpMethod
 import com.hyt.oncehttp.annotation.HttpMethod.Companion.GET
 import com.hyt.oncehttp.annotation.HttpMethod.Companion.POST
+import com.hyt.oncehttp.annotation.PostContentType
 import com.hyt.oncehttp.exception.BackMediaTypeException
 import com.hyt.oncehttp.exception.DataException
 import com.hyt.oncehttp.exception.ResponseException
