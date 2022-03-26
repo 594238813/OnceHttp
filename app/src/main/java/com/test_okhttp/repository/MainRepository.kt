@@ -1,5 +1,6 @@
 package com.test_okhttp.repository
 
+import com.hyt.oncehttp.DownloadRequest
 import com.hyt.oncehttp.makeOnceRequestGET
 import com.hyt.oncehttp.makeOnceRequestPSOT_JSON
 import com.test_okhttp.bean.*
@@ -64,6 +65,12 @@ class MainRepository {
     //测试方法  bean 可有 list 方式
     fun sendJsonSubList(bean: SuggectSubmitBean) =
         FeedBackRequest().addParam(bean).requestBackFlow<HttpData<String?>>()
+
+
+    //下载文件
+    fun downloadFile(url:String,file: File,onProcess:(process:Int)->Unit)
+       = DownloadRequest(url,file).requestDownload(onProcess)
+
 
 
 }

@@ -78,12 +78,30 @@ class MainViewModel:ViewModel() {
     fun sendJsonSubList(bean: SuggectSubmitBean) =
         repository.sendJsonSubList(bean)
             .onStart {
-                //这里可以修改 viewmodel状态
-                //比如 dialog 关闭显示
+
             }.catch {
                 Log.e("catch","${it.message}")
             }.onCompletion {
-                //关闭dialog
+
             }
+
+
+    val processLiveData = MutableLiveData(0)
+    val dialogFlag = MutableLiveData(false)
+
+    fun downloadFile(url:String, file: File)
+        = repository.downloadFile(url,file){
+            processLiveData.value = it
+        }.onStart {
+            processLiveData.value = 0
+            dialogFlag.value = true
+        }.catch {
+            Log.e("catch","${it.message}")
+            dialogFlag.value = false
+        }.onCompletion {
+            dialogFlag.value = false
+        }
+
+
 
 }

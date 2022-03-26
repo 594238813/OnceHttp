@@ -6,6 +6,7 @@ import com.github.simonpercic.oklog.core.Logger
 import com.github.simonpercic.oklog3.OkLogInterceptor
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.logging.HttpLoggingInterceptor
 
 class KtHttpConfig {
 
@@ -17,6 +18,8 @@ class KtHttpConfig {
     }
 
     var okHttpClient = OkHttpClient.Builder()
+//        .addInterceptor(HttpLoggingInterceptor()
+//            .setLevel(HttpLoggingInterceptor.Level.BODY))
 //        .addInterceptor(OkLogInterceptor.builder()
 //            .withAllLogData()
 //            .setLogger(object:Logger{

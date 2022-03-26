@@ -3,6 +3,7 @@ package com.test_okhttp
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -10,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import com.test_okhttp.bean.*
 import com.wildma.pictureselector.PictureBean
 import com.wildma.pictureselector.PictureSelector
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -67,9 +67,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.btn_onceRequest).setOnClickListener {
             lifecycleScope.launchWhenStarted {
                 //测试5 处理get中 有分页
-                val bean = mainViewModel.requestArticle(1).first()
-                Log.e("code", "${bean.errorCode}")
-                Log.e("size", "${bean.data?.size}")
+//                val bean = mainViewModel.requestArticle(1).first()
+//                Log.e("code", "${bean.errorCode}")
+//                Log.e("size", "${bean.data?.size}")
 
 
                 //测试6   由于内部方法是 suspend  需要在 协程中 且  是IO线程上
@@ -79,7 +79,28 @@ class MainActivity : AppCompatActivity() {
 //                    }
 //                }
 //                Log.e("code", "${bean2?.data?.size}")
+
+
+                //测试7 文件下载
+
+                val file =  File("${this@MainActivity.cacheDir.absoluteFile}${File.separator}download", "微信 8.0.15.apk")
+                Log.e("file","${file}")
+                Log.e("file","${file.getParentFile() }")
+                Log.e("file","${file.getParentFile().exists() }")
+                Log.e("file","${file.isRooted },${file.isFile}")
+                mainViewModel.downloadFile("https://dldir1.qq.com/weixin/android/weixin8015android2020_arm64.apk",file)
+                    .collect{
+                        Log.e("onCompletion","下载完成${file.absoluteFile},${file.exists()}")
+                    }
             }
+
+
+            val processBar = findViewById<ProgressBar>(R.id.pb_process)
+            mainViewModel.processLiveData.observe(this){
+                processBar.progress = it
+            }
+
+
         }
 
         findViewById<TextView>(R.id.btn_upload).setOnClickListener {

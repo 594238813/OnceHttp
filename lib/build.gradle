@@ -39,7 +39,7 @@ dependencies {
 
     api 'com.google.code.gson:gson:2.8.9'
     api("com.squareup.okhttp3:okhttp:4.9.0")
-
+    api 'com.squareup.okhttp3:logging-interceptor:4.9.0'
     implementation 'com.github.simonpercic:oklog3-java:2.3.0'
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0"

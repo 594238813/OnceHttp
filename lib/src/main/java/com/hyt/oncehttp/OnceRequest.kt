@@ -15,11 +15,10 @@ import com.hyt.oncehttp.annotation.HttpMethod
 import com.hyt.oncehttp.annotation.HttpMethod.Companion.GET
 import com.hyt.oncehttp.annotation.HttpMethod.Companion.POST
 import com.hyt.oncehttp.annotation.PostContentType
-import com.hyt.oncehttp.exception.BackMediaTypeException
-import com.hyt.oncehttp.exception.DataException
-import com.hyt.oncehttp.exception.ResponseException
+import com.hyt.oncehttp.exception.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -144,6 +143,7 @@ abstract class OnceRequest{
     }
 
     private var name = ""
+    //上传  和 下载文件的 对象
     private lateinit var file: File
 
     //添加上传文件
@@ -168,11 +168,9 @@ abstract class OnceRequest{
         }
     }
 
-
     //请求返回-bean
     suspend inline fun <reified T> requestBackBean() : T {
         return withContext(Dispatchers.IO) {
-
 
             var response: Response
             val duration = measureTimeMillis {
@@ -194,7 +192,6 @@ abstract class OnceRequest{
                 val json = response.body?.charStream()
                 val resultBean = Gson().fromJson<T>(json, object : TypeToken<T>() {}.type)
 
-
                 //afterRequest拦截 认为  数据是否正常 或者修改数据
                 //先拦截 在发射
                 makeLog(response, resultBean, duration)
@@ -207,6 +204,7 @@ abstract class OnceRequest{
             }
         }
     }
+
 
     fun makeLog(response: Response, json: Any?, duration: Long) {
         try {
